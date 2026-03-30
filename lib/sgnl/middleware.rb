@@ -41,7 +41,7 @@ module Sgnl
       return if rand > Sgnl.configuration.usage_sample_rate
 
       Sgnl.usage("pageview", metadata: {
-        path: env["PATH_INFO"],
+        path: scrub_path(env["PATH_INFO"]),
         method: env["REQUEST_METHOD"],
         status: status.to_i,
         latency_ms: duration_ms
@@ -59,11 +59,18 @@ module Sgnl
     def request_metadata(env)
       meta = {
         method: env["REQUEST_METHOD"],
-        path: env["PATH_INFO"],
-        user_agent: env["HTTP_USER_AGENT"]
+        path: scrub_path(env["PATH_INFO"]),
       }
       meta[:controller] = env["action_controller.instance"]&.class&.name if env["action_controller.instance"]
       meta.compact
+    end
+
+    # Replace numeric IDs and UUIDs in paths with :id to avoid sending identifiers
+    def scrub_path(path)
+      return path unless path
+      path
+        .gsub(%r{/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}i, "/:id") # UUIDs
+        .gsub(%r{/\d+}, "/:id") # numeric IDs
     end
 
     def ignored?(exception)
