@@ -28,7 +28,8 @@ module Sgnl
       Thread.new do
         client = Client.new(
           project_key: Sgnl.configuration.project_key,
-          api_url: Sgnl.configuration.api_url
+          api_url: Sgnl.configuration.api_url,
+          api_version: Sgnl.configuration.api_version
         )
 
         loop do
