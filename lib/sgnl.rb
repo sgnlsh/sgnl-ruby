@@ -79,11 +79,7 @@ module Sgnl
     end
 
     def tracker
-      @tracker ||= begin
-        t = Tracker.new
-        sync_settings
-        t
-      end
+      @tracker ||= Tracker.new
     end
 
     def shutdown
@@ -100,21 +96,5 @@ module Sgnl
       @configuration = Configuration.new
     end
 
-    private
-
-    def sync_settings
-      return unless enabled?
-
-      client = Client.new(
-        project_key: configuration.project_key,
-        api_url: configuration.api_url,
-        api_version: configuration.api_version
-      )
-      client.update_app_settings(
-        fix_prompts_enabled: configuration.fix_prompts
-      )
-    rescue StandardError
-      # Never let config sync break the app
-    end
   end
 end

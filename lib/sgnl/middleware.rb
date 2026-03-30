@@ -30,9 +30,15 @@ module Sgnl
       Sgnl.error(exception, metadata: request_metadata(env))
     end
 
+    ASSET_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map)$/i
+
     def track_usage(env, status)
       return unless env["REQUEST_METHOD"] == "GET"
       return if status.to_i >= 400
+      return if env["PATH_INFO"]&.match?(ASSET_EXTENSIONS)
+      return if env["PATH_INFO"]&.start_with?("/assets", "/packs", "/vite")
+      return unless env["HTTP_ACCEPT"]&.include?("text/html") || env["action_controller.instance"]
+      return if rand > Sgnl.configuration.usage_sample_rate
 
       Sgnl.usage("pageview", metadata: {
         path: env["PATH_INFO"],
