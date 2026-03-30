@@ -18,7 +18,7 @@ module Sgnl
 
       duration_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - start) * 1000).round
 
-      track_usage(env, status) if Sgnl.configuration.track_usage
+      track_usage(env, status, duration_ms) if Sgnl.configuration.track_usage
       track_slow(env, duration_ms) if duration_ms >= Sgnl.configuration.slow_threshold_ms
 
       [status, headers, response]
@@ -32,7 +32,7 @@ module Sgnl
 
     ASSET_EXTENSIONS = /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map)$/i
 
-    def track_usage(env, status)
+    def track_usage(env, status, duration_ms)
       return unless env["REQUEST_METHOD"] == "GET"
       return if status.to_i >= 400
       return if env["PATH_INFO"]&.match?(ASSET_EXTENSIONS)
@@ -43,7 +43,8 @@ module Sgnl
       Sgnl.usage("pageview", metadata: {
         path: env["PATH_INFO"],
         method: env["REQUEST_METHOD"],
-        status: status.to_i
+        status: status.to_i,
+        latency_ms: duration_ms
       })
     end
 
